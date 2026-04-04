@@ -1,20 +1,12 @@
 # see-video
 
-**Your agent sees the video. Not a description of it.**
+**There's a difference between being told what happened and seeing it yourself.**
 
----
+Most video pipelines hand your LLM a description written by a different model.
+It never sees the video. It reads someone else's account of it.
 
-Most video pipelines work like this:
-
-1. Send video to Gemini or GPT-4o
-2. Get a text description back
-3. Pass that description to your actual LLM
-
-It works. But your LLM never sees a single frame.
-It reads a summary — filtered through another model's priorities and blind spots.
-
-`see-video` skips the middleman.
-Frames go directly into your context window. Your model does the seeing.
+`see-video` puts the frames in your model's context directly.
+No proxy. No handoff. It sees what you send.
 
 ---
 
