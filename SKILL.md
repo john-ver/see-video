@@ -1,6 +1,6 @@
 ---
 name: see-video
-description: "영상 첨부(mp4, mov, mkv 등)가 있거나 영상 내용 분석 요청을 받았을 때 사용. 영상에서 프레임을 추출해 LLM이 직접 볼 수 있는 이미지 그리드로 변환한다. uniform 모드(기본): 균등 간격 샘플링. highlight 모드: 장면 전환 기반 샘플링. ⚠️ 이미지 입력(멀티모달) 지원 모델 필수."
+description: "Use when the user sends a video file or asks about video content. Extracts frames and injects them as an image grid directly into the LLM context — no proxy model, no description handoff. uniform mode (default): evenly spaced sampling. highlight mode: scene-change biased sampling. ⚠️ Requires a vision-capable (multimodal) model."
 metadata:
   {
     "openclaw": {
@@ -28,24 +28,22 @@ metadata:
 
 # see-video
 
-영상 → 프레임 그리드 이미지 + XML 타임스탬프를 LLM 컨텍스트에 주입한다.
+Extract frames from a video and inject them as a grid image + XML timestamps into LLM context.
 
-## 초기 설정 (최초 1회)
-
-스킬 디렉토리에서 의존성 설치:
+## Setup (first time only)
 
 ```bash
-cd <이 SKILL.md가 있는 디렉토리>
+cd <skill directory>
 npm install
 ```
 
-## 실행
+## Usage
 
 ```bash
 node {baseDir}/scripts/inject.mjs <video_path> [--mode uniform|highlight] [--start N] [--end N]
 ```
 
-성공 시 JSON stdout 출력:
+On success, outputs JSON to stdout:
 
 ```json
 {
@@ -60,55 +58,55 @@ node {baseDir}/scripts/inject.mjs <video_path> [--mode uniform|highlight] [--sta
 }
 ```
 
-에러 시 stderr에 `ERROR: <메시지>` + `Hint: <진단>` 출력 후 exit 1.
+On error, writes `ERROR: <message>` + `Hint: <diagnosis>` to stderr and exits 1.
 
-## 주입 절차
+## Injection procedure
 
-**1단계 — 스크립트 실행 (bash 툴):**
+**Step 1 — Run the script (bash tool):**
 
 ```bash
 node {baseDir}/scripts/inject.mjs "/path/to/video.mp4"
 ```
 
-**2단계 — JSON 파싱:**
-`gridPath`와 `description` 추출.
+**Step 2 — Parse JSON:**
+Extract `gridPath` and `description`.
 
-**3단계 — 이미지 주입 (read 툴):**
+**Step 3 — Inject image (read tool):**
 
 ```
 read <gridPath>
 ```
 
-`read` 툴이 jpg를 멀티모달 이미지 블록으로 직접 컨텍스트에 주입한다.
-이미지를 확인한 후 `description` XML의 타임스탬프를 참고해 분석:
+The `read` tool injects the jpg as a native multimodal image block into context.
+After viewing the grid, use the `description` XML timestamps to reference frames:
 
-> "그리드 이미지를 봤다면, 위 description XML의 타임스탬프를 참고해서 영상 내용을 분석해줘. 각 셀 좌상단 숫자가 프레임 인덱스."
+> "Look at the grid image above. Use the timestamps in the description XML to analyze the video. The number in the top-left of each cell is the frame index."
 
-**에러 발생 시:**
-- stderr의 `Hint:` 메시지를 사용자에게 자연스러운 언어로 전달. raw 에러 메시지 그대로 붙여넣기 금지.
-- `read <gridPath>` 실패 시 — `/tmp/`는 임시 디렉토리이므로 파일이 사라졌을 수 있음. 스크립트 재실행 후 즉시 read 할 것.
+**On error:**
+- Translate the `Hint:` message into natural language for the user. Do not paste raw error output.
+- If `read <gridPath>` fails — `/tmp/` files are ephemeral. Re-run the script and read immediately.
 
-## 옵션
+## Options
 
-| 옵션 | 설명 | 기본값 |
-|------|------|--------|
-| `--mode uniform` | 균등 간격 샘플링 | ✅ 기본 |
-| `--mode highlight` | 장면 전환 기반 샘플링 | |
-| `--start N` | 구간 시작 (초) | 0 |
-| `--end N` | 구간 끝 (초) | 영상 끝 |
+| Option | Default | Description |
+|---|---|---|
+| `--mode uniform` | ✅ | Evenly spaced frames |
+| `--mode highlight` | | Scene-change biased sampling |
+| `--start N` | `0` | Segment start (seconds) |
+| `--end N` | end of video | Segment end (seconds) |
 
-## 진단 가이드
+## Diagnostics
 
-| 에러 패턴 | 원인 | 해결 |
-|-----------|------|------|
-| `Input file not found` | 파일 없음. 채널 미디어 용량 제한으로 drop됐을 가능성 | 파일 경로를 텍스트로 직접 전달 요청 |
-| `corrupt, incomplete, or unsupported format` | 파일 손상 / 전송 중단 / 지원하지 않는 코덱 | 다른 파일 시도, 또는 `--start`/`--end`로 구간 지정 |
-| `moov atom not found` | mp4 전송이 완료되지 않은 파일 (스트리밍 미완료) | 완전한 파일로 재시도 |
-| `ffmpeg not found` | ffmpeg 미설치 | `ffmpeg` 설치 확인 |
+| Error | Cause | Action |
+|---|---|---|
+| `Input file not found` | File missing or dropped by channel media size limit | Ask the user to share the file path directly as text |
+| `corrupt, incomplete, or unsupported format` | Damaged file, interrupted transfer, or unsupported codec | Try a different file, or use `--start`/`--end` to skip problematic sections |
+| `moov atom not found` | Incomplete mp4 (streaming not finished) | Retry with a complete file |
+| `ffmpeg not found` | ffmpeg not installed | Check ffmpeg installation |
 
-## 참고
+## Notes
 
-- 프레임 수·셀 크기는 영상 길이/비율 기준 자동 결정 (라이브러리 내부)
-- 그리드 ~1500×1500px, 셀 긴 변 384~512px
-- 타임스탬프는 이미지가 아닌 `description` XML에만 포함
-- 세로/가로 영상 모두 지원
+- Frame count and cell size are determined automatically from video duration and aspect ratio
+- Grid is ~1500×1500px, cell long side 384–512px
+- Timestamps are in the `description` XML only, not overlaid on the image
+- Portrait and landscape videos both supported
