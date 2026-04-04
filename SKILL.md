@@ -3,7 +3,26 @@ name: see-video
 description: "영상 첨부(mp4, mov, mkv 등)가 있거나 영상 내용 분석 요청을 받았을 때 사용. 영상에서 프레임을 추출해 LLM이 직접 볼 수 있는 이미지 그리드로 변환한다. uniform 모드(기본): 균등 간격 샘플링. highlight 모드: 장면 전환 기반 샘플링. ⚠️ 이미지 입력(멀티모달) 지원 모델 필수."
 metadata:
   {
-    "openclaw": { "emoji": "🎬", "requires": { "bins": ["ffmpeg", "node"] } },
+    "openclaw": {
+      "emoji": "🎬",
+      "requires": { "bins": ["ffmpeg", "node"] },
+      "install": [
+        {
+          "id": "brew",
+          "kind": "brew",
+          "formula": "ffmpeg",
+          "bins": ["ffmpeg"],
+          "label": "Install ffmpeg (brew)",
+        },
+        {
+          "id": "apt",
+          "kind": "apt",
+          "package": "ffmpeg",
+          "bins": ["ffmpeg"],
+          "label": "Install ffmpeg (apt)",
+        },
+      ],
+    },
   }
 ---
 
@@ -23,10 +42,8 @@ npm install
 ## 실행
 
 ```bash
-node scripts/inject.mjs <video_path> [--mode uniform|highlight] [--start N] [--end N]
+node {baseDir}/scripts/inject.mjs <video_path> [--mode uniform|highlight] [--start N] [--end N]
 ```
-
-(경로는 이 SKILL.md 위치 기준 상대경로. 프레임워크가 절대경로로 자동 resolve.)
 
 성공 시 JSON stdout 출력:
 
@@ -38,21 +55,19 @@ node scripts/inject.mjs <video_path> [--mode uniform|highlight] [--start N] [--e
   "frameCount": 28,
   "layout": { "cols": 4, "rows": 7, "cellW": 384, "cellH": 216 },
   "videoWidth": 854,
-  "videoHeight": 480
+  "videoHeight": 480,
+  "inputSizeMb": 42.3
 }
 ```
 
 에러 시 stderr에 `ERROR: <메시지>` + `Hint: <진단>` 출력 후 exit 1.
-
-성공 시 출력 필드:
-- `inputSizeMb` — 원본 영상 크기(MB). 파일이 전달되지 않은 원인 추정에 활용.
 
 ## 주입 절차
 
 **1단계 — 스크립트 실행 (bash 툴):**
 
 ```bash
-node /path/to/skills/see-video/scripts/inject.mjs "/path/to/video.mp4"
+node {baseDir}/scripts/inject.mjs "/path/to/video.mp4"
 ```
 
 **2단계 — JSON 파싱:**
@@ -69,6 +84,10 @@ read <gridPath>
 
 > "그리드 이미지를 봤다면, 위 description XML의 타임스탬프를 참고해서 영상 내용을 분석해줘. 각 셀 좌상단 숫자가 프레임 인덱스."
 
+**에러 발생 시:**
+- stderr의 `Hint:` 메시지를 사용자에게 자연스러운 언어로 전달. raw 에러 메시지 그대로 붙여넣기 금지.
+- `read <gridPath>` 실패 시 — `/tmp/`는 임시 디렉토리이므로 파일이 사라졌을 수 있음. 스크립트 재실행 후 즉시 read 할 것.
+
 ## 옵션
 
 | 옵션 | 설명 | 기본값 |
@@ -77,13 +96,6 @@ read <gridPath>
 | `--mode highlight` | 장면 전환 기반 샘플링 | |
 | `--start N` | 구간 시작 (초) | 0 |
 | `--end N` | 구간 끝 (초) | 영상 끝 |
-
-## 파일 경로 처리
-
-- **WSL 환경**: Windows 경로(`C:\...`) → WSL 경로(`/mnt/c/...`)로 변환 후 사용
-- **텔레그램 첨부파일**: 에이전트가 다운로드한 로컬 경로를 그대로 사용
-- 경로에 한글/공백 포함 시 반드시 따옴표로 감싸기
-- 채널을 통해 파일이 전달되지 않는 경우(채널·에이전트의 미디어 수신 용량 제한 등), 파일 경로를 직접 텍스트로 전달할 것
 
 ## 진단 가이드
 
