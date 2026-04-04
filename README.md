@@ -1,19 +1,20 @@
 # see-video
 
-**Your AI agent can now understand video. Inject video frames directly into context — no proxy model, no description handoff.**
+**Your agent sees the video. Not a description of it.**
 
 ---
 
-## The Problem with "Describe and Pretend"
+Most video pipelines work like this:
 
-Most video pipelines for LLMs follow the same pattern: send the video to a
-capable multimodal service (Gemini, GPT-4o), receive a text description back,
-then pass that description to your main LLM. It works — but it's not the same
-as your LLM watching the video. The model you're talking to never sees a single
-frame. It reads a summary written by a different model, filtered through that
-model's priorities, blind spots, and abstraction choices. The gap between
-"a model described it" and "my LLM saw it" matters most when the video carries
-nuance, motion, or detail that survives frames but dies in prose.
+1. Send video to Gemini or GPT-4o
+2. Get a text description back
+3. Pass that description to your actual LLM
+
+It works. But your LLM never sees a single frame.
+It reads a summary — filtered through another model's priorities and blind spots.
+
+`see-video` skips the middleman.
+Frames go directly into your context window. Your model does the seeing.
 
 ---
 
