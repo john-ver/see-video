@@ -88,17 +88,41 @@ timestamp — giving the model a unified view of what it would have seen
 
 ## Why Not Just Use Gemini?
 
-Gemini's native video API is excellent for many workflows. This skill is
-for when:
+Gemini's native video API is excellent. If it's already your primary model, use it.
 
-- Your primary model is **Claude, GPT-4o**, or any vision-capable LLM
+But there's a problem with the common pattern of using Gemini *just for video*
+while your actual agent runs on something else.
+
+**The model that describes the video is not the model reasoning about it.**
+
+That gap matters more than it seems. When Gemini describes a video and passes
+the text to Claude or GPT-4o, your agent is reasoning from a filtered account —
+shaped by Gemini's priorities, its abstraction choices, what it decided was
+worth mentioning. The nuance that didn't make it into the description is gone.
+Your model can't ask "wait, what was in the background at 0:43" — it was never
+told.
+
+With `see-video`, the frames are in the context. The model reasoning about the
+video is the same one that saw it. There's no translation layer.
+
+---
+
+**Use `see-video` when:**
+
+- Your primary model is Claude (Bedrock), GPT-4o, or any vision-capable LLM
   without a native video API
-- You want **your** model — the one holding the conversation — to do the seeing
-- You need video understanding in the **same context window** as the conversation
-- You prefer not to route media through a third-party service
+- Context coherence matters — the model analyzing the video should be the same
+  one holding the conversation
+- You're in an environment where routing media through a third-party service
+  isn't an option (enterprise, air-gapped, privacy-sensitive)
+- You want the full conversation to be handled by a single model, with full
+  access to everything it has seen
 
-If Gemini is already your main model and its native video API covers your
-use case, use that. This skill exists for everyone else.
+**Stick with Gemini's native API when:**
+
+- Gemini is already your primary model
+- The video is long (>30 min) and frame sampling would miss too much
+- You need audio transcription without building Step 2 yourself
 
 ---
 
