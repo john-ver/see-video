@@ -8,6 +8,7 @@ import { extract } from "llm-frames";
 import { writeFile, stat } from "fs/promises";
 import { tmpdir } from "os";
 import { join, basename, extname } from "path";
+import { randomBytes } from "crypto";
 
 const args = process.argv.slice(2);
 
@@ -39,7 +40,8 @@ try {
   const result = await extract(opts);
 
   const name = basename(opts.input, extname(opts.input));
-  const gridPath = join(tmpdir(), `${name}_llm-frames.jpg`);
+  const suffix = randomBytes(6).toString("hex");
+  const gridPath = join(tmpdir(), `${name}_llm-frames_${suffix}.jpg`);
   await writeFile(gridPath, result.grid);
 
   console.log(JSON.stringify({
