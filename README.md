@@ -1,5 +1,13 @@
 # see-video
 
+[![ClawHub](https://img.shields.io/badge/clawhub-see--video-blue)](https://clawhub.ai/john-ver/see-video)
+
+```bash
+npx clawhub@latest install see-video
+```
+
+---
+
 **There's a difference between being told what happened and seeing it yourself.**
 
 Most video pipelines hand your LLM a description written by a different model.
