@@ -55,7 +55,7 @@ node scripts/inject.mjs /path/to/video.mp4 --start 60 --end 120
 
 ```json
 {
-  "gridPath": "/tmp/video_llm-frames.jpg",
+  "gridPath": "/tmp/video_llm-frames_a1b2c3.jpg",
   "description": "<video_frames>...</video_frames>",
   "duration": 1326,
   "frameCount": 28,
