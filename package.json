@@ -1,6 +1,6 @@
 {
   "type": "module",
   "dependencies": {
-    "llm-frames": "^0.1.0"
+    "llm-frames": "^0.2.2"
   }
 }
