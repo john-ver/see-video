@@ -44,6 +44,15 @@ try {
   const gridPath = join(tmpdir(), `${name}_llm-frames_${suffix}.jpg`);
   await writeFile(gridPath, result.grid);
 
+  const SEGMENT_SEC = 600; // 10분
+  const isLong = result.duration > SEGMENT_SEC && !opts.startTime && !opts.endTime;
+  const segments = isLong
+    ? Array.from(
+        { length: Math.ceil(result.duration / SEGMENT_SEC) },
+        (_, i) => ({ start: i * SEGMENT_SEC, end: Math.min((i + 1) * SEGMENT_SEC, result.duration) })
+      )
+    : undefined;
+
   console.log(JSON.stringify({
     gridPath,
     description: result.description,
@@ -53,6 +62,10 @@ try {
     videoWidth: result.videoWidth,
     videoHeight: result.videoHeight,
     inputSizeMb,
+    ...(isLong && {
+      hint: `Video is ${Math.round(result.duration / 60)} minutes long. For better coverage, process in segments using --start/--end.`,
+      suggestedSegments: segments,
+    }),
   }, null, 2));
 } catch (e) {
   const msg = e.message ?? String(e);

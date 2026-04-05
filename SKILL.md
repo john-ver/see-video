@@ -58,6 +58,21 @@ On success, outputs JSON to stdout:
 }
 ```
 
+If the video exceeds 10 minutes and no `--start/--end` was given, two extra fields are included:
+
+```json
+{
+  "hint": "Video is 30 minutes long. For better coverage, process in segments using --start/--end.",
+  "suggestedSegments": [
+    { "start": 0, "end": 600 },
+    { "start": 600, "end": 1200 },
+    { "start": 1200, "end": 1800 }
+  ]
+}
+```
+
+When `suggestedSegments` is present, run the script once per segment with the corresponding `--start`/`--end` values, then present all grids together.
+
 On error, writes `ERROR: <message>` + `Hint: <diagnosis>` to stderr and exits 1.
 
 ## Injection procedure
