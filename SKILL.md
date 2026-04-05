@@ -58,20 +58,17 @@ On success, outputs JSON to stdout:
 }
 ```
 
-If the video exceeds 10 minutes and no `--start/--end` was given, two extra fields are included:
+If the video exceeds 10 minutes and uniform mode was used without `--start/--end`, a `hint` field is included:
 
 ```json
 {
-  "hint": "Video is 30 minutes long. For better coverage, process in segments using --start/--end.",
-  "suggestedSegments": [
-    { "start": 0, "end": 600 },
-    { "start": 600, "end": 1200 },
-    { "start": 1200, "end": 1800 }
-  ]
+  "hint": "Video is 30 minutes long. This is a uniform overview. For better scene coverage re-run with --mode highlight, or use --start/--end to zoom into a specific section."
 }
 ```
 
-When `suggestedSegments` is present, run the script once per segment with the corresponding `--start`/`--end` values, then present all grids together.
+**Recommended workflow for long videos:**
+1. First run with `--mode highlight` — shows key scene changes across the whole video
+2. If the user wants detail on a specific section, re-run with `--start N --end N`
 
 On error, writes `ERROR: <message>` + `Hint: <diagnosis>` to stderr and exits 1.
 
