@@ -122,3 +122,4 @@ After viewing the grid, use the `description` XML timestamps to reference frames
 - Grid is ~1500×1500px, cell long side 384–512px
 - Timestamps are in the `description` XML only, not overlaid on the image
 - Portrait and landscape videos both supported
+- **Telegram users:** if a video file is not attached to the message, check `channels.telegram.mediaMaxMb` in the OpenClaw config — the file may have been dropped at the channel level before reaching the agent
